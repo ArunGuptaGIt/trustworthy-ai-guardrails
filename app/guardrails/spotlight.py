@@ -23,6 +23,7 @@ Functions:
 - parse_chunk_refs(prompt)      : extract (document_id, chunk_index) pairs from
                                    nonce-wrapped context blocks (used by mock LLM)
 """
+
 from __future__ import annotations
 
 import os

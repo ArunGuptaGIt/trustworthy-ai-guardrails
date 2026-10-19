@@ -22,6 +22,7 @@ LIMITATIONS (documented):
   positives on short base64-like strings.
 - No language detection: Romanized Nepali or Hindi are treated as English.
 """
+
 from __future__ import annotations
 
 import base64
@@ -29,9 +30,7 @@ import re
 import unicodedata
 
 # Devanagari digit -> ASCII digit
-_DEVA_DIGITS: dict[int, str] = {
-    ord(c): str(i) for i, c in enumerate("०१२३४५६७८९")
-}
+_DEVA_DIGITS: dict[int, str] = {ord(c): str(i) for i, c in enumerate("०१२३४५६७८९")}
 
 # Simple leetspeak map
 _LEET: dict[str, str] = {
@@ -45,9 +44,7 @@ _LEET: dict[str, str] = {
 }
 
 # Zero-width and invisible Unicode code points to strip
-_ZERO_WIDTH = re.compile(
-    r"[\u200b\u200c\u200d\u200e\u200f\u00ad\ufeff\u2060\u2061\u2062\u2063\u2064]"
-)
+_ZERO_WIDTH = re.compile(r"[\u200b\u200c\u200d\u200e\u200f\u00ad\ufeff\u2060\u2061\u2062\u2063\u2064]")
 
 # Control characters (except \t, \n, \r)
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")

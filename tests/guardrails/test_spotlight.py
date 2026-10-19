@@ -1,4 +1,5 @@
 """Tests for spotlight nonce wrapping and injection scanning."""
+
 from __future__ import annotations
 
 from app.guardrails.spotlight import (
@@ -80,10 +81,7 @@ class TestInjectionScanner:
         assert scan_chunk_for_injection(text) is False
 
     def test_faq_not_flagged(self) -> None:
-        text = (
-            "Q: How do I book an interview? "
-            "A: Fill out the form and submit before the deadline."
-        )
+        text = "Q: How do I book an interview? A: Fill out the form and submit before the deadline."
         assert scan_chunk_for_injection(text) is False
 
 

@@ -18,6 +18,7 @@ Actions:
 Monitor mode: all checks run and log, but action is always ALLOW.
 Fail-closed: any exception in enforce mode -> HARD_BLOCK with generic message.
 """
+
 from __future__ import annotations
 
 import logging
@@ -170,13 +171,17 @@ class InputGuardrails:
             worst_action = inj_action
 
         # Update session risk
-        updated_risk = await update_session_risk(
-            self.redis,
-            session_id,
-            inj_score,
-            decay=self.config.session_risk_decay,
-            ttl_seconds=self.config.session_risk_ttl_seconds,
-        ) if self.redis else inj_score
+        updated_risk = (
+            await update_session_risk(
+                self.redis,
+                session_id,
+                inj_score,
+                decay=self.config.session_risk_decay,
+                ttl_seconds=self.config.session_risk_ttl_seconds,
+            )
+            if self.redis
+            else inj_score
+        )
 
         self._emit_audit(session_id, "injection", inj_action, inj_score, inj_findings, sanitized)
 
@@ -212,13 +217,9 @@ class InputGuardrails:
                     if inj_score >= self.config.injection_block_threshold
                 )
                 if inj_blocked:
-                    user_msg = self.config.messages.get(
-                        "injection_blocked", "Your message was blocked."
-                    )
+                    user_msg = self.config.messages.get("injection_blocked", "Your message was blocked.")
                 else:
-                    user_msg = self.config.messages.get(
-                        "hard_block", "I cannot help with that request."
-                    )
+                    user_msg = self.config.messages.get("hard_block", "I cannot help with that request.")
 
         elif worst_action == InputAction.SAFE_RESPONSE:
             # Self-harm path
@@ -236,15 +237,19 @@ class InputGuardrails:
             notices: list[str] = []
             if pii_findings:
                 if has_secret or has_card:
-                    notices.append(self.config.messages.get(
-                        "secret_notice",
-                        "A possible secret was detected and removed.",
-                    ))
+                    notices.append(
+                        self.config.messages.get(
+                            "secret_notice",
+                            "A possible secret was detected and removed.",
+                        )
+                    )
                 else:
-                    notices.append(self.config.messages.get(
-                        "pii_masked",
-                        "I removed some personal information for your privacy.",
-                    ))
+                    notices.append(
+                        self.config.messages.get(
+                            "pii_masked",
+                            "I removed some personal information for your privacy.",
+                        )
+                    )
             user_msg = " ".join(notices)
 
         elif worst_action == InputAction.ALLOW_WITH_DISCLAIMER:

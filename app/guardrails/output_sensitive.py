@@ -17,6 +17,7 @@ System-prompt leakage detection:
 
 Actions: REDACT (PII), REFUSE (secrets, canary, prompt-overlap leak).
 """
+
 from __future__ import annotations
 
 import logging
@@ -112,10 +113,12 @@ def check_output_sensitive(
     # 1. Check for system-prompt leakage (REFUSE)
     leaked, detail = check_canary_leak(answer, canary_token, system_prompt, ngram_size, overlap_threshold)
     if leaked:
-        findings.append(Finding(
-            type=FindingType.OUTPUT_CANARY_LEAK if "canary" in detail else FindingType.OUTPUT_PROMPT_OVERLAP,
-            detail=detail,
-        ))
+        findings.append(
+            Finding(
+                type=FindingType.OUTPUT_CANARY_LEAK if "canary" in detail else FindingType.OUTPUT_PROMPT_OVERLAP,
+                detail=detail,
+            )
+        )
         logger.warning("System-prompt leakage detected: %s", detail)
         return answer, findings, OutputAction.REFUSE
 

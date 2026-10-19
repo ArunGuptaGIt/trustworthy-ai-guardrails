@@ -34,6 +34,7 @@ LIMITATIONS (documented):
 - Unsupported claims built from words that happen to appear in context
   may score as SUPPORTED (false negative).
 """
+
 from __future__ import annotations
 
 import re
@@ -74,6 +75,7 @@ def split_sentences(text: str) -> list[str]:
 # Canonicalization
 # ---------------------------------------------------------------------------
 
+
 def _normalize_amount(text: str) -> str:
     """Normalize Rs. 1,500 / NPR 1500 / 1500 rupees -> '1500'."""
     text = re.sub(r"Rs\.?\s*", "", text, flags=re.IGNORECASE)
@@ -84,9 +86,18 @@ def _normalize_amount(text: str) -> str:
 
 
 _MONTH_MAP = {
-    "jan": "01", "feb": "02", "mar": "03", "apr": "04",
-    "may": "05", "jun": "06", "jul": "07", "aug": "08",
-    "sep": "09", "oct": "10", "nov": "11", "dec": "12",
+    "jan": "01",
+    "feb": "02",
+    "mar": "03",
+    "apr": "04",
+    "may": "05",
+    "jun": "06",
+    "jul": "07",
+    "aug": "08",
+    "sep": "09",
+    "oct": "10",
+    "nov": "11",
+    "dec": "12",
 }
 
 
@@ -144,14 +155,80 @@ def _extract_dates(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 _STOP_WORDS = {
-    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-    "to", "of", "in", "on", "at", "for", "with", "by", "and", "or", "but",
-    "not", "no", "this", "that", "these", "those", "it", "its", "we", "i",
-    "you", "he", "she", "they", "them", "our", "your", "their", "from",
-    "as", "will", "can", "do", "does", "did", "have", "has", "had", "would",
-    "could", "should", "may", "might", "shall", "which", "who", "when",
-    "where", "how", "what", "all", "any", "each", "more", "also", "than",
-    "about", "up", "out", "into", "if", "so", "then",
+    "the",
+    "a",
+    "an",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "to",
+    "of",
+    "in",
+    "on",
+    "at",
+    "for",
+    "with",
+    "by",
+    "and",
+    "or",
+    "but",
+    "not",
+    "no",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+    "we",
+    "i",
+    "you",
+    "he",
+    "she",
+    "they",
+    "them",
+    "our",
+    "your",
+    "their",
+    "from",
+    "as",
+    "will",
+    "can",
+    "do",
+    "does",
+    "did",
+    "have",
+    "has",
+    "had",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "shall",
+    "which",
+    "who",
+    "when",
+    "where",
+    "how",
+    "what",
+    "all",
+    "any",
+    "each",
+    "more",
+    "also",
+    "than",
+    "about",
+    "up",
+    "out",
+    "into",
+    "if",
+    "so",
+    "then",
 }
 
 
@@ -167,6 +244,7 @@ def _tokenize_content(text: str) -> list[str]:
 def _compute_idf(corpus: list[str]) -> dict[str, float]:
     """Very simple IDF over the given corpus of strings."""
     import math
+
     n = max(len(corpus), 1)
     df: dict[str, int] = {}
     for doc in corpus:
@@ -180,8 +258,7 @@ def _compute_idf(corpus: list[str]) -> dict[str, float]:
 # ---------------------------------------------------------------------------
 
 _REDACT_NOTE = (
-    "\n\n(Note: some details were removed because they could not be verified"
-    " against the provided documents.)"
+    "\n\n(Note: some details were removed because they could not be verified against the provided documents.)"
 )
 
 _NEGATIONS = re.compile(
@@ -204,11 +281,14 @@ def _has_strong_quantifier(text: str) -> bool:
 # ---------------------------------------------------------------------------
 
 _META_PATTERNS: list[re.Pattern[str]] = [
-    re.compile(r"\b(the documents? do not contain|not found in the|unable to find|"
-               r"no information|based on the (provided|retrieved|given)|"
-               r"according to the (documents?|context|information)|"
-               r"the (documents?|context) (says?|states?|indicates?)|"
-               r"hello|hi,?|thank you|sure|of course|happy to help)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(the documents? do not contain|not found in the|unable to find|"
+        r"no information|based on the (provided|retrieved|given)|"
+        r"according to the (documents?|context|information)|"
+        r"the (documents?|context) (says?|states?|indicates?)|"
+        r"hello|hi,?|thank you|sure|of course|happy to help)\b",
+        re.IGNORECASE,
+    ),
 ]
 
 
@@ -222,6 +302,7 @@ def _is_meta_sentence(sentence: str) -> bool:
 # ---------------------------------------------------------------------------
 # ClaimVerifier protocol
 # ---------------------------------------------------------------------------
+
 
 @runtime_checkable
 class ClaimVerifier(Protocol):
@@ -304,6 +385,7 @@ class LexicalVerifier:
 # ---------------------------------------------------------------------------
 # Main groundedness check
 # ---------------------------------------------------------------------------
+
 
 class GroundednessResult:
     def __init__(

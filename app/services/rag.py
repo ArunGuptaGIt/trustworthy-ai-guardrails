@@ -21,6 +21,7 @@ Request flow (with guardrails enabled):
 Raw message, raw user text and raw PII are never logged or stored in memory.
 The sanitized (PII-masked) version is used everywhere downstream.
 """
+
 from __future__ import annotations
 
 import logging
@@ -155,9 +156,7 @@ class RAGPipelineService:
         # STEP 4a: BOOKING PATH
         # ------------------------------------------------------------------
         if is_booking_active or intent in ("booking", "booking_followup"):
-            answer, updated_booking_state = await self.booking_service.process_booking_turn(
-                session_id, sanitized
-            )
+            answer, updated_booking_state = await self.booking_service.process_booking_turn(session_id, sanitized)
             # Store SANITIZED user text (PII-masked) in memory - NOT raw message
             await self.memory_service.add_turn(session_id, sanitized, answer)
 
@@ -253,9 +252,7 @@ class RAGPipelineService:
         context_str = "\n\n---\n\n".join(context_parts)
 
         # Build system prompt with spotlighting addon
-        use_professional_threshold = any(
-            f.type.value == "topic:professional_advice" for f in input_decision.findings
-        )
+        use_professional_threshold = any(f.type.value == "topic:professional_advice" for f in input_decision.findings)
         system_prompt = SYSTEM_RAG_PROMPT + build_system_prompt_addon(nonce)
 
         # Add injection reinforcement if flagged

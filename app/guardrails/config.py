@@ -8,6 +8,7 @@ Fail-closed: any exception during guardrail execution in enforce mode blocks
 the request with a generic safe message. In monitor mode, exceptions are logged
 and the request proceeds unchanged.
 """
+
 from __future__ import annotations
 
 import tomllib

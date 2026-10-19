@@ -12,6 +12,7 @@ The LLM is instructed to return ONLY:
 Strict Pydantic v2 validation is used: no type coercion, so the
 string "false" is correctly rejected as a non-bool value.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -96,6 +97,7 @@ class BookingExtractStrict(BaseModel):
         if v is None:
             return None
         import re
+
         if not isinstance(v, str):
             return None
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
@@ -108,6 +110,7 @@ class BookingExtractStrict(BaseModel):
         if v is None:
             return None
         import re
+
         if not isinstance(v, str):
             return None
         if not re.match(r"^\d{1,2}:\d{2}$", v):

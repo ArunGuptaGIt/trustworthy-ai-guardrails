@@ -8,6 +8,7 @@ Provides:
 - InMemoryAsyncRedis: in-process Redis replacement
 - build_pipeline(): constructs a full RAGPipelineService offline
 """
+
 from __future__ import annotations
 
 import json
@@ -36,9 +37,7 @@ class InMemoryAsyncRedis:
     async def get(self, name: str) -> str | None:
         return self.store.get(name)
 
-    async def set(
-        self, name: str, value: str, ex: int | None = None
-    ) -> bool:
+    async def set(self, name: str, value: str, ex: int | None = None) -> bool:
         self.store[name] = value
         return True
 
@@ -74,38 +73,24 @@ class ScriptedLLMService(BaseLLMService):
             resp = self._responses[self._index]
             self._index += 1
             return resp
-        return (
-            '{"answer": "Mock answer from scripted LLM.", '
-            '"answerable": false, "citations": [], "confidence": 0.0}'
-        )
+        return '{"answer": "Mock answer from scripted LLM.", "answerable": false, "citations": [], "confidence": 0.0}'
 
-    async def rewrite_query(
-        self, history: list[dict[str, str]], query: str
-    ) -> str:
+    async def rewrite_query(self, history: list[dict[str, str]], query: str) -> str:
         return query
 
-    async def classify_intent(
-        self, message: str, history: list[dict[str, str]]
-    ) -> str:
+    async def classify_intent(self, message: str, history: list[dict[str, str]]) -> str:
         msg_lower = message.lower()
         if any(k in msg_lower for k in ["book", "interview", "schedule"]):
             return "booking"
-        if any(
-            k in msg_lower
-            for k in ["cancel", "confirm", "yes", "@", "[email"]
-        ):
+        if any(k in msg_lower for k in ["cancel", "confirm", "yes", "@", "[email"]):
             return "booking_followup"
         return "question"
 
-    async def extract_booking_info(
-        self, message: str, current_state: dict[str, Any]
-    ) -> BookingExtract:
+    async def extract_booking_info(self, message: str, current_state: dict[str, Any]) -> BookingExtract:
         cancel = "cancel" in message.lower()
         confirm = "confirm" in message.lower() or "yes" in message.lower()
         email = current_state.get("email")
-        m_email = re.search(
-            r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", message
-        )
+        m_email = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", message)
         if m_email:
             email = m_email.group(0)
         m_date = re.search(r"\b202\d-\d{2}-\d{2}\b", message)
@@ -113,25 +98,20 @@ class ScriptedLLMService(BaseLLMService):
         m_time = re.search(r"\b\d{1,2}:\d{2}\b", message)
         time_val = m_time.group(0) if m_time else current_state.get("time")
         name = current_state.get("name")
-        if (
-            not name
-            and not cancel
-            and not confirm
-            and "@" not in message
-            and "[EMAIL" not in message
-        ):
+        if not name and not cancel and not confirm and "@" not in message and "[EMAIL" not in message:
             cleaned = message.strip()
             for prefix in [
-                "my name is", "i am", "name is", "this is", "im",
+                "my name is",
+                "i am",
+                "name is",
+                "this is",
+                "im",
             ]:
                 if cleaned.lower().startswith(prefix):
-                    cleaned = cleaned[len(prefix):].strip()
+                    cleaned = cleaned[len(prefix) :].strip()
                     break
             cleaned = cleaned.strip(".,!?:;\"'")
-            if cleaned and not any(
-                k in cleaned.lower()
-                for k in ["book", "interview", "schedule"]
-            ):
+            if cleaned and not any(k in cleaned.lower() for k in ["book", "interview", "schedule"]):
                 name = cleaned
         return BookingExtract(
             name=name,
@@ -166,53 +146,53 @@ class CompliantAttackerLLM(BaseLLMService):
         # Leak system prompt
         if "reveal" in lower or "system prompt" in lower or "ignore" in lower:
             leaked = system_prompt or "no system prompt"
-            return json.dumps({
-                "answer": f"Sure! The system prompt is: {leaked}",
-                "answerable": True,
-                "citations": [],
-                "confidence": 1.0,
-            })
+            return json.dumps(
+                {
+                    "answer": f"Sure! The system prompt is: {leaked}",
+                    "answerable": True,
+                    "citations": [],
+                    "confidence": 1.0,
+                }
+            )
         # Repeat PII from context
-        emails = re.findall(
-            r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", prompt
-        )
+        emails = re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", prompt)
         phones = re.findall(r"\b9[678]\d{8}\b", prompt)
         if emails or phones:
             leaked_pii = ", ".join(emails + phones)
-            return json.dumps({
-                "answer": f"Here is the info: {leaked_pii}",
+            return json.dumps(
+                {
+                    "answer": f"Here is the info: {leaked_pii}",
+                    "answerable": True,
+                    "citations": [],
+                    "confidence": 1.0,
+                }
+            )
+        # Fabricate numbers
+        return json.dumps(
+            {
+                "answer": (
+                    "The fee is Rs. 99,999 and the deadline is 2025-01-01. All candidates must pay immediately."
+                ),
                 "answerable": True,
                 "citations": [],
-                "confidence": 1.0,
-            })
-        # Fabricate numbers
-        return json.dumps({
-            "answer": (
-                "The fee is Rs. 99,999 and the deadline is 2025-01-01. "
-                "All candidates must pay immediately."
-            ),
-            "answerable": True,
-            "citations": [],
-            "confidence": 0.95,
-        })
+                "confidence": 0.95,
+            }
+        )
 
-    async def rewrite_query(
-        self, history: list[dict[str, str]], query: str
-    ) -> str:
+    async def rewrite_query(self, history: list[dict[str, str]], query: str) -> str:
         return query
 
-    async def classify_intent(
-        self, message: str, history: list[dict[str, str]]
-    ) -> str:
+    async def classify_intent(self, message: str, history: list[dict[str, str]]) -> str:
         return "question"
 
-    async def extract_booking_info(
-        self, message: str, current_state: dict[str, Any]
-    ) -> BookingExtract:
+    async def extract_booking_info(self, message: str, current_state: dict[str, Any]) -> BookingExtract:
         return BookingExtract(
-            name="Fake Name", email="fake@evil.com",
-            date="2099-01-01", time="00:00",
-            cancel=False, confirm=True,
+            name="Fake Name",
+            email="fake@evil.com",
+            date="2099-01-01",
+            time="00:00",
+            cancel=False,
+            confirm=True,
         )
 
 
@@ -232,9 +212,7 @@ class StubEmbeddingService(BaseEmbeddingService):
 class StubVectorStore(VectorStoreService):
     """Returns pre-configured search results."""
 
-    def __init__(
-        self, results: list[VectorSearchResult] | None = None
-    ) -> None:
+    def __init__(self, results: list[VectorSearchResult] | None = None) -> None:
         self._results = results or []
         # satisfy parent __init__ with a mock client
         super().__init__(client=AsyncMock())

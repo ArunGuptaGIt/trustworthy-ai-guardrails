@@ -1,4 +1,5 @@
 """Tests for output guardrails: schema validation, groundedness, output PII."""
+
 from __future__ import annotations
 
 from app.guardrails.groundedness import (
@@ -20,6 +21,7 @@ from app.guardrails.types import (
 # ---------------------------------------------------------------------------
 # Schema Validation
 # ---------------------------------------------------------------------------
+
 
 class TestSchemaValidation:
     def test_valid_json(self) -> None:
@@ -48,21 +50,14 @@ class TestSchemaValidation:
         raw = "This is not JSON at all"
         schema, findings, _ = parse_rag_response(raw, set())
         assert schema is None
-        assert any(
-            f.type == FindingType.OUTPUT_SCHEMA_INVALID for f in findings
-        )
+        assert any(f.type == FindingType.OUTPUT_SCHEMA_INVALID for f in findings)
 
     def test_string_false_rejected(self) -> None:
-        raw = (
-            '{"answer": "X.", "answerable": "false", '
-            '"citations": [], "confidence": 0.5}'
-        )
+        raw = '{"answer": "X.", "answerable": "false", "citations": [], "confidence": 0.5}'
         schema, findings, _ = parse_rag_response(raw, set())
         # strict mode: "false" (string) should fail validation
         assert schema is None
-        assert any(
-            f.type == FindingType.OUTPUT_SCHEMA_INVALID for f in findings
-        )
+        assert any(f.type == FindingType.OUTPUT_SCHEMA_INVALID for f in findings)
 
     def test_unfaithful_citation_dropped(self) -> None:
         raw = (
@@ -77,15 +72,13 @@ class TestSchemaValidation:
         assert schema is not None
         assert len(schema.citations) == 1
         assert schema.citations[0].document_id == "doc1"
-        assert any(
-            f.type == FindingType.OUTPUT_CITATION_UNFAITHFUL
-            for f in findings
-        )
+        assert any(f.type == FindingType.OUTPUT_CITATION_UNFAITHFUL for f in findings)
 
 
 # ---------------------------------------------------------------------------
 # Groundedness
 # ---------------------------------------------------------------------------
+
 
 class TestGroundedness:
     def test_supported_answer_passes(self) -> None:
@@ -98,9 +91,7 @@ class TestGroundedness:
         context = ["The fee is Rs. 1,500."]
         answer = "The fee is Rs. 5,000."
         result = check_groundedness(answer, context)
-        assert result.action in (
-            OutputAction.REDACT, OutputAction.REGENERATE
-        )
+        assert result.action in (OutputAction.REDACT, OutputAction.REGENERATE)
 
     def test_negation_mismatch(self) -> None:
         from app.guardrails.groundedness import (
@@ -108,6 +99,7 @@ class TestGroundedness:
             _compute_idf,
             split_sentences,
         )
+
         context = "The office does provide lunch."
         answer = "The office does not provide lunch."
         ctx_sents = split_sentences(context)
@@ -130,9 +122,7 @@ class TestGroundedness:
 
     def test_meta_sentence_skipped(self) -> None:
         context = ["The policy covers X."]
-        answer = (
-            "Based on the provided documents, the policy covers X."
-        )
+        answer = "Based on the provided documents, the policy covers X."
         result = check_groundedness(answer, context)
         assert result.action == OutputAction.PASS
 
@@ -140,6 +130,7 @@ class TestGroundedness:
 # ---------------------------------------------------------------------------
 # Output Sensitive Info
 # ---------------------------------------------------------------------------
+
 
 class TestOutputSensitive:
     def test_canary_leak_detected(self) -> None:
@@ -153,8 +144,11 @@ class TestOutputSensitive:
         prompt = "You are a helpful assistant that answers from context only"
         answer = "You are a helpful assistant that answers from context only and more"
         leaked, _ = check_canary_leak(
-            answer, canary_token="", system_prompt=prompt,
-            ngram_size=6, overlap_threshold=0.3,
+            answer,
+            canary_token="",
+            system_prompt=prompt,
+            ngram_size=6,
+            overlap_threshold=0.3,
         )
         assert leaked is True
 

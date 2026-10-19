@@ -4,6 +4,7 @@ Core types for the guardrail system.
 InputAction precedence (highest wins): HARD_BLOCK > SAFE_RESPONSE > MASK > ALLOW_WITH_DISCLAIMER > ALLOW
 OutputAction precedence: REFUSE > REGENERATE > REDACT > PASS
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

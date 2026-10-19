@@ -15,6 +15,7 @@ a corrective prompt, then ask the user to rephrase.
 Monitor mode: all checks run and log, but the original answer is passed through.
 Fail-closed: any exception in enforce mode -> FALLBACK.
 """
+
 from __future__ import annotations
 
 import logging
@@ -194,8 +195,7 @@ class OutputGuardrails:
                 strict_prompt = (
                     "The previous response contained claims not supported by the retrieved context. "
                     "Please answer again using ONLY information explicitly stated in the provided documents. "
-                    "If the documents do not contain the answer, say so clearly.\n\n"
-                    + build_corrective_prompt()
+                    "If the documents do not contain the answer, say so clearly.\n\n" + build_corrective_prompt()
                 )
                 try:
                     regenerated = await regenerate_fn(strict_prompt)

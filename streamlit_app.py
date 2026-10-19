@@ -1,4 +1,5 @@
 """Small Streamlit client for the FastAPI RAG and guardrail service."""
+
 from __future__ import annotations
 
 import os
@@ -39,8 +40,7 @@ def _render_response(payload: dict[str, object]) -> None:
             for source in sources:
                 if isinstance(source, dict):
                     st.write(
-                        f"Document `{source.get('document_id', 'unknown')}`, "
-                        f"chunk `{source.get('chunk_index', '?')}`"
+                        f"Document `{source.get('document_id', 'unknown')}`, chunk `{source.get('chunk_index', '?')}`"
                     )
 
     booking = payload.get("booking")
@@ -101,4 +101,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

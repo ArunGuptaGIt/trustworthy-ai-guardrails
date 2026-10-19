@@ -33,6 +33,7 @@ LIMITATIONS (documented):
 - Quote-wrapping gives a ~60% discount (not a full block) which allows
   sophisticated attackers to probe with reduced scores.
 """
+
 from __future__ import annotations
 
 import math
@@ -46,6 +47,7 @@ from app.guardrails.types import Finding, FindingType
 # Rule definitions
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class WindowRule:
     """
@@ -57,6 +59,7 @@ class WindowRule:
     weight: contribution weight (0-1) to the noisy-OR score
     category: injection category name
     """
+
     verb_re: re.Pattern[str]
     noun_re: re.Pattern[str]
     max_tokens: int
@@ -101,7 +104,9 @@ _RULES: list[WindowRule] = [
     # "reveal / print / show / output the system prompt / instructions / api key"
     WindowRule(
         verb_re=_r(r"^(reveal|print|show|output|display|leak|return|repeat|expose|dump|exfiltrate|send|email)$"),
-        noun_re=_r(r"^(prompt|instructions|system|secret|password|key|token|credentials|api|rules|config|configuration)$"),
+        noun_re=_r(
+            r"^(prompt|instructions|system|secret|password|key|token|credentials|api|rules|config|configuration)$"
+        ),
         max_tokens=6,
         weight=0.85,
         category="extraction",
@@ -167,23 +172,31 @@ _RULES: list[WindowRule] = [
 _ROMANIZED_PATTERNS: list[tuple[re.Pattern[str], str, FindingType, float]] = [
     (
         _r(r"\b(niyam\s+bhul|nirdesh\s+bhul|sabai\s+niyam|paila\s+nirdesh)\b"),
-        "direct_injection", FindingType.INJECTION_DIRECT, 0.70,
+        "direct_injection",
+        FindingType.INJECTION_DIRECT,
+        0.70,
     ),
     (
         _r(r"\b(apni\s+pahchan|batao\s+secret|mujhe\s+batao)\b"),
-        "extraction", FindingType.INJECTION_EXTRACTION, 0.65,
+        "extraction",
+        FindingType.INJECTION_EXTRACTION,
+        0.65,
     ),
     (
         _r(r"\b(system\s+prompt\s+batao|instructions\s+dikhao)\b"),
-        "extraction", FindingType.INJECTION_EXTRACTION, 0.75,
+        "extraction",
+        FindingType.INJECTION_EXTRACTION,
+        0.75,
     ),
 ]
 
 # Framing patterns that indicate mention-rather-than-use context
 _MENTION_FRAMES: list[re.Pattern[str]] = [
-    _r(r"\b(what\s+does|what\s+is|the\s+phrase|the\s+document\s+says|example\s+of|"
-       r"definition\s+of|explain\s+what|what\s+would|how\s+would|suppose|hypothetically|"
-       r"if\s+someone|as\s+an\s+example|for\s+instance|suppose\s+that)\b"),
+    _r(
+        r"\b(what\s+does|what\s+is|the\s+phrase|the\s+document\s+says|example\s+of|"
+        r"definition\s+of|explain\s+what|what\s+would|how\s+would|suppose|hypothetically|"
+        r"if\s+someone|as\s+an\s+example|for\s+instance|suppose\s+that)\b"
+    ),
 ]
 
 # Quote detection: check if match is inside "..." or '...'

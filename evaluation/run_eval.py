@@ -20,6 +20,7 @@ The baseline is implemented here and uses only:
     - A fixed keyword list for injection
     - A single email regex for PII
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,14 +57,11 @@ from evaluation.harness import InMemoryAsyncRedis
 # Helpers
 # ---------------------------------------------------------------------------
 
-def precision_recall_f1(
-    tp: int, fp: int, fn: int
-) -> tuple[float, float, float]:
+
+def precision_recall_f1(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
     prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = (
-        2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
-    )
+    f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
     return prec, rec, f1
 
 
@@ -74,6 +72,7 @@ def fmt_pct(v: float) -> str:
 # ---------------------------------------------------------------------------
 # Baseline implementation
 # ---------------------------------------------------------------------------
+
 
 class NaiveBaseline:
     """
@@ -106,9 +105,7 @@ class NaiveBaseline:
                 found.append("pii:email")
         return found
 
-    def check_groundedness(
-        self, answer: str, context: list[str]
-    ) -> bool:
+    def check_groundedness(self, answer: str, context: list[str]) -> bool:
         return True  # baseline doesn't check groundedness
 
 
@@ -118,6 +115,7 @@ baseline = NaiveBaseline()
 # ---------------------------------------------------------------------------
 # Input action evaluation
 # ---------------------------------------------------------------------------
+
 
 async def eval_input_actions(
     dataset: list[tuple[str, str, str, str]],
@@ -139,24 +137,22 @@ async def eval_input_actions(
         d = await guard.check(text, "eval_session")
         sys_results.append((expected, d.action.value))
         baseline_results.append((expected, baseline.classify_action(text)))
-        cases.append({
-            "id": f"input_action_{index:03d}",
-            "input": text,
-            "reference_information": note,
-            "expected_behavior": {"action": expected, "category": category},
-            "actual_behavior": {"action": d.action.value, "findings": d.flags},
-            "passed": d.action.value == expected,
-        })
+        cases.append(
+            {
+                "id": f"input_action_{index:03d}",
+                "input": text,
+                "reference_information": note,
+                "expected_behavior": {"action": expected, "category": category},
+                "actual_behavior": {"action": d.action.value, "findings": d.flags},
+                "passed": d.action.value == expected,
+            }
+        )
     elapsed = time.perf_counter() - start
 
-    def compute_metrics(
-        results: list[tuple[str, str]]
-    ) -> dict[str, object]:
+    def compute_metrics(results: list[tuple[str, str]]) -> dict[str, object]:
         # Per-class TP/FP/FN
         classes = sorted({exp for exp, _ in results})
-        stats: dict[str, dict[str, int]] = {
-            c: {"tp": 0, "fp": 0, "fn": 0} for c in classes
-        }
+        stats: dict[str, dict[str, int]] = {c: {"tp": 0, "fp": 0, "fn": 0} for c in classes}
         for exp, pred in results:
             if exp == pred:
                 stats[exp]["tp"] += 1
@@ -195,6 +191,7 @@ async def eval_input_actions(
 # PII evaluation
 # ---------------------------------------------------------------------------
 
+
 def eval_pii(
     dataset: list[tuple[str, list[str], str]],
     label: str,
@@ -227,14 +224,16 @@ def eval_pii(
         for ft in base_found:
             if ft not in expected_types:
                 base_fp += 1
-        cases.append({
-            "id": f"pii_{index:03d}",
-            "input": text,
-            "reference_information": note,
-            "expected_behavior": {"finding_types": expected_types},
-            "actual_behavior": {"finding_types": found_types},
-            "passed": set(found_types) == set(expected_types),
-        })
+        cases.append(
+            {
+                "id": f"pii_{index:03d}",
+                "input": text,
+                "reference_information": note,
+                "expected_behavior": {"finding_types": expected_types},
+                "actual_behavior": {"finding_types": found_types},
+                "passed": set(found_types) == set(expected_types),
+            }
+        )
 
     s_p, s_r, s_f = precision_recall_f1(sys_tp, sys_fp, sys_fn)
     b_p, b_r, b_f = precision_recall_f1(base_tp, base_fp, base_fn)
@@ -251,6 +250,7 @@ def eval_pii(
 # ---------------------------------------------------------------------------
 # Injection evaluation
 # ---------------------------------------------------------------------------
+
 
 def eval_injection(
     dataset: list[tuple[str, bool, float, str]],
@@ -284,14 +284,16 @@ def eval_injection(
             base_fn += 1
         else:
             base_tn += 1
-        cases.append({
-            "id": f"injection_{index:03d}",
-            "input": text,
-            "reference_information": note,
-            "expected_behavior": {"flagged": expected_fire, "minimum_score": min_score},
-            "actual_behavior": {"flagged": pred, "score": score},
-            "passed": pred == expected_fire,
-        })
+        cases.append(
+            {
+                "id": f"injection_{index:03d}",
+                "input": text,
+                "reference_information": note,
+                "expected_behavior": {"flagged": expected_fire, "minimum_score": min_score},
+                "actual_behavior": {"flagged": pred, "score": score},
+                "passed": pred == expected_fire,
+            }
+        )
 
     s_p, s_r, s_f = precision_recall_f1(sys_tp, sys_fp, sys_fn)
     b_p, b_r, b_f = precision_recall_f1(base_tp, base_fp, base_fn)
@@ -322,13 +324,23 @@ def eval_injection(
         "n": len(dataset),
         "threshold": threshold,
         "system": {
-            "precision": s_p, "recall": s_r, "f1": s_f,
+            "precision": s_p,
+            "recall": s_r,
+            "f1": s_f,
             "pr_auc": round(pr_auc, 4),
-            "tp": sys_tp, "fp": sys_fp, "fn": sys_fn, "tn": sys_tn,
+            "tp": sys_tp,
+            "fp": sys_fp,
+            "fn": sys_fn,
+            "tn": sys_tn,
         },
         "baseline": {
-            "precision": b_p, "recall": b_r, "f1": b_f,
-            "tp": base_tp, "fp": base_fp, "fn": base_fn, "tn": base_tn,
+            "precision": b_p,
+            "recall": b_r,
+            "f1": b_f,
+            "tp": base_tp,
+            "fp": base_fp,
+            "fn": base_fn,
+            "tn": base_tn,
         },
         "cases": cases,
     }
@@ -337,6 +349,7 @@ def eval_injection(
 # ---------------------------------------------------------------------------
 # Groundedness evaluation
 # ---------------------------------------------------------------------------
+
 
 def eval_groundedness(
     dataset: list[tuple[str, list[str], bool, str]],
@@ -367,19 +380,21 @@ def eval_groundedness(
             base_tp += 1
         elif base_pred and not expected_grounded:
             base_fp += 1
-        cases.append({
-            "id": f"groundedness_{index:03d}",
-            "input": answer,
-            "reference_information": {"context": context, "note": note},
-            "expected_behavior": {"grounded": expected_grounded},
-            "actual_behavior": {
-                "grounded": pred_grounded,
-                "action": result.action.value,
-                "supported_ratio": result.supported_ratio,
-                "claims": [{"claim": claim, "score": score} for claim, score in result.per_claim],
-            },
-            "passed": pred_grounded == expected_grounded,
-        })
+        cases.append(
+            {
+                "id": f"groundedness_{index:03d}",
+                "input": answer,
+                "reference_information": {"context": context, "note": note},
+                "expected_behavior": {"grounded": expected_grounded},
+                "actual_behavior": {
+                    "grounded": pred_grounded,
+                    "action": result.action.value,
+                    "supported_ratio": result.supported_ratio,
+                    "claims": [{"claim": claim, "score": score} for claim, score in result.per_claim],
+                },
+                "passed": pred_grounded == expected_grounded,
+            }
+        )
 
     s_p, s_r, s_f = precision_recall_f1(sys_tp, sys_fp, sys_fn)
     b_p, b_r, b_f = precision_recall_f1(base_tp, base_fp, base_fn)
@@ -388,11 +403,18 @@ def eval_groundedness(
         "label": label,
         "n": len(dataset),
         "system": {
-            "precision": s_p, "recall": s_r, "f1": s_f,
-            "tp": sys_tp, "fp": sys_fp, "fn": sys_fn, "tn": sys_tn,
+            "precision": s_p,
+            "recall": s_r,
+            "f1": s_f,
+            "tp": sys_tp,
+            "fp": sys_fp,
+            "fn": sys_fn,
+            "tn": sys_tn,
         },
         "baseline": {
-            "precision": b_p, "recall": b_r, "f1": b_f,
+            "precision": b_p,
+            "recall": b_r,
+            "f1": b_f,
         },
         "cases": cases,
     }
@@ -402,20 +424,18 @@ def eval_groundedness(
 # Pretty printing
 # ---------------------------------------------------------------------------
 
+
 def print_results(results: dict[str, object]) -> None:
     def row(label: str, sys_v: float, base_v: float, higher_better: bool = True) -> None:
         diff = sys_v - base_v
         marker = "+" if (diff >= 0) == higher_better else "-"
-        print(
-            f"  {label:<38} sys={fmt_pct(sys_v)}  base={fmt_pct(base_v)}"
-            f"  delta={marker}{fmt_pct(abs(diff))}"
-        )
+        print(f"  {label:<38} sys={fmt_pct(sys_v)}  base={fmt_pct(base_v)}  delta={marker}{fmt_pct(abs(diff))}")
 
     for section, data in results.items():
         d = data  # type: ignore[assignment]
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"  {section.upper()} ({d['label']}, n={d['n']})")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         sys_m = d.get("system", {})
         base_m = d.get("baseline", {})
         for key in ("precision", "recall", "f1", "pr_auc"):
@@ -432,6 +452,7 @@ def print_results(results: dict[str, object]) -> None:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 async def main(split: str, out: str | None) -> None:
     print(f"\nEvaluating on split: {split}")
@@ -479,17 +500,25 @@ async def main(split: str, out: str | None) -> None:
     pii = all_results["pii_detection"]
     grnd = all_results["groundedness"]
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  SUMMARY (system vs baseline)")
-    print("="*70)
-    print(f"  Input action macro-F1: sys={fmt_pct(ia['system']['macro_f1'])}  "  # type: ignore[index]
-          f"base={fmt_pct(ia['baseline']['macro_f1'])}")  # type: ignore[index]
-    print(f"  Injection F1:          sys={fmt_pct(inj['system']['f1'])}  "  # type: ignore[index]
-          f"base={fmt_pct(inj['baseline']['f1'])}")  # type: ignore[index]
-    print(f"  PII F1:                sys={fmt_pct(pii['system']['f1'])}  "  # type: ignore[index]
-          f"base={fmt_pct(pii['baseline']['f1'])}")  # type: ignore[index]
-    print(f"  Groundedness F1:       sys={fmt_pct(grnd['system']['f1'])}  "  # type: ignore[index]
-          f"base={fmt_pct(grnd['baseline']['f1'])}")  # type: ignore[index]
+    print("=" * 70)
+    print(
+        f"  Input action macro-F1: sys={fmt_pct(ia['system']['macro_f1'])}  "  # type: ignore[index]
+        f"base={fmt_pct(ia['baseline']['macro_f1'])}"
+    )  # type: ignore[index]
+    print(
+        f"  Injection F1:          sys={fmt_pct(inj['system']['f1'])}  "  # type: ignore[index]
+        f"base={fmt_pct(inj['baseline']['f1'])}"
+    )  # type: ignore[index]
+    print(
+        f"  PII F1:                sys={fmt_pct(pii['system']['f1'])}  "  # type: ignore[index]
+        f"base={fmt_pct(pii['baseline']['f1'])}"
+    )  # type: ignore[index]
+    print(
+        f"  Groundedness F1:       sys={fmt_pct(grnd['system']['f1'])}  "  # type: ignore[index]
+        f"base={fmt_pct(grnd['baseline']['f1'])}"
+    )  # type: ignore[index]
 
 
 if __name__ == "__main__":

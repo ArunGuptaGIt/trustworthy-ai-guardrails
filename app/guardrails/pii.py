@@ -28,6 +28,7 @@ LIMITATIONS (documented in this module and in the report):
   extracted locally and replaced with [EMAIL_1] before any LLM call.
   The real email is passed out-of-band to the booking service.
 """
+
 from __future__ import annotations
 
 import math
@@ -53,6 +54,7 @@ _PLACEHOLDERS = {_EMAIL_PH, _PHONE_PH, _CARD_PH, _ID_PH, _SECRET_PH, _IP_PH, _EM
 # Helper: Luhn check
 # ---------------------------------------------------------------------------
 
+
 def _luhn_check(number: str) -> bool:
     """Return True if the digit string passes the Luhn algorithm."""
     digits = [int(c) for c in reversed(number) if c.isdigit()]
@@ -71,6 +73,7 @@ def _luhn_check(number: str) -> bool:
 # ---------------------------------------------------------------------------
 # Helper: Shannon entropy
 # ---------------------------------------------------------------------------
+
 
 def _shannon_entropy(s: str) -> float:
     if not s:
@@ -99,9 +102,7 @@ _CARD_PATTERN = re.compile(r"\b(?:\d[ \-]?){12,18}\d\b")
 
 # Email: standard + obfuscated forms
 # "name at gmail dot com", "name[at]domain[dot]com", "name(at)domain.com"
-_EMAIL_STANDARD = re.compile(
-    r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"
-)
+_EMAIL_STANDARD = re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b")
 _EMAIL_OBFUSCATED = re.compile(
     r"\b[A-Za-z0-9._%+\-]+\s*(?:\[at\]|\(at\)|at)\s*[A-Za-z0-9.\-]+\s*(?:\[dot\]|\(dot\)|dot)\s*[A-Za-z]{2,}\b",
     re.IGNORECASE,
@@ -113,9 +114,7 @@ _EMAIL_BRACKETED = re.compile(
 )
 
 # Nepali mobile: 96x, 97x, 98x - optional +977 or 977 prefix
-_NP_MOBILE = re.compile(
-    r"(?:\+977[\s\-]?|977[\s\-]?)?(?:96|97|98)\d[\s\-]?\d{3}[\s\-]?\d{4}\b"
-)
+_NP_MOBILE = re.compile(r"(?:\+977[\s\-]?|977[\s\-]?)?(?:96|97|98)\d[\s\-]?\d{3}[\s\-]?\d{4}\b")
 
 # Kathmandu landline: 01-XXXXXXX (7 digits after area code)
 _KTM_LANDLINE = re.compile(r"\b01[\s\-]?\d{7}\b")
@@ -167,6 +166,7 @@ def _is_already_masked(text: str, start: int, end: int) -> bool:
 # ---------------------------------------------------------------------------
 # Main detection function
 # ---------------------------------------------------------------------------
+
 
 def detect_pii(text: str) -> list[Finding]:
     """
@@ -304,6 +304,7 @@ def _placeholder_for(ft: FindingType) -> str:
 # ---------------------------------------------------------------------------
 # Booking email tokenization (U4)
 # ---------------------------------------------------------------------------
+
 
 def tokenize_email_for_booking(text: str) -> tuple[str, str | None]:
     """

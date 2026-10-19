@@ -26,6 +26,7 @@ LIMITATIONS (documented):
 - Benign context check can be fooled by combining an attack with a benign frame.
 - Language coverage is English + a few Romanized Nepali phrases.
 """
+
 from __future__ import annotations
 
 import re
@@ -35,6 +36,7 @@ from app.guardrails.types import Finding, FindingType, InputAction
 # ---------------------------------------------------------------------------
 # Pattern sets per topic
 # ---------------------------------------------------------------------------
+
 
 def _r(p: str) -> re.Pattern[str]:
     return re.compile(p, re.IGNORECASE)

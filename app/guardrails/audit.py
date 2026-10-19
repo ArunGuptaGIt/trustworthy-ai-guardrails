@@ -21,6 +21,7 @@ Audit event schema:
     "policy_version": str,
 }
 """
+
 from __future__ import annotations
 
 import hashlib

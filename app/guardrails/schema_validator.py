@@ -13,6 +13,7 @@ Parsing strategy:
 On failure: build a corrective retry prompt (generic wording, does not
 echo the invalid output), retry once, then FALLBACK to the safe message.
 """
+
 from __future__ import annotations
 
 import json
