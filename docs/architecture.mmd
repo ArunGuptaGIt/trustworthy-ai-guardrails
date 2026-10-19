@@ -1,0 +1,28 @@
+flowchart TD
+    U[User message] --> R[POST /api/v1/chat]
+    R --> I[InputGuardrails]
+    I --> N[Normalize]
+    N --> P[PII detect and mask]
+    P --> J[Injection scoring]
+    J --> T[Sensitive-topic classification]
+    T --> D{Input action}
+    D -->|hard_block or safe_response| B[Safe response]
+    D -->|allow, mask, disclaimer| H[History and booking state]
+    H --> L[Intent classification]
+    L --> Q[Embedding and vector search]
+    Q --> S[Spotlight context chunks]
+    S --> G[LLM generation]
+    G --> O[OutputGuardrails]
+    O --> V[Strict schema validation]
+    V --> W[Groundedness and per-claim support]
+    W --> X[Output PII, secret, canary checks]
+    X --> A{Output action}
+    A -->|pass| Y[Return answer]
+    A -->|redact| Z[Return redacted answer]
+    A -->|regenerate| G
+    A -->|fallback or refuse| F[Return safe fallback]
+    B --> M[Masked/post-guardrail memory]
+    Y --> M
+    Z --> M
+    F --> M
+    M --> C[ChatResponse]

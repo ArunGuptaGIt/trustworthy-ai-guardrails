@@ -1,0 +1,143 @@
+### 1. Health Check Endpoint
+GET http://localhost:8001/health
+Accept: application/json
+
+###
+
+### 2. Upload Document - Text File (Fixed Chunking Strategy)
+POST http://localhost:8001/api/v1/documents
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="chunking_strategy"
+
+fixed
+--WebAppBoundary
+Content-Disposition: form-data; name="chunk_size"
+
+300
+--WebAppBoundary
+Content-Disposition: form-data; name="chunk_overlap"
+
+50
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sample.txt"
+Content-Type: text/plain
+
+< ../samples/sample.txt
+--WebAppBoundary--
+
+###
+
+### 3. Upload Document - PDF File (Recursive Chunking Strategy)
+POST http://localhost:8001/api/v1/documents
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="chunking_strategy"
+
+recursive
+--WebAppBoundary
+Content-Disposition: form-data; name="chunk_size"
+
+400
+--WebAppBoundary
+Content-Disposition: form-data; name="chunk_overlap"
+
+80
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ../samples/sample.pdf
+--WebAppBoundary--
+
+###
+
+### 4. List Documents (Paginated)
+GET http://localhost:8001/api/v1/documents?limit=10&offset=0
+Accept: application/json
+
+###
+
+### 5. Get Document Details by ID
+GET http://localhost:8001/api/v1/documents/REPLACE_WITH_DOCUMENT_ID
+Accept: application/json
+
+###
+
+### 6. Delete Document and Vector Embeddings
+DELETE http://localhost:8001/api/v1/documents/REPLACE_WITH_DOCUMENT_ID
+Accept: application/json
+
+###
+
+### 7. Conversational RAG - Initial Question
+POST http://localhost:8001/api/v1/chat
+Content-Type: application/json
+
+{
+  "session_id": "demo-session-001",
+  "message": "What is the document ingestion pipeline?"
+}
+
+###
+
+### 8. Conversational RAG - Follow-up Question (Contextual Query Rewriting)
+POST http://localhost:8001/api/v1/chat
+Content-Type: application/json
+
+{
+  "session_id": "demo-session-001",
+  "message": "What chunking strategies are supported by it?"
+}
+
+###
+
+### 9. Interview Booking Flow - Turn 1 (Initiate Booking)
+POST http://localhost:8001/api/v1/chat
+Content-Type: application/json
+
+{
+  "session_id": "booking-session-999",
+  "message": "I would like to book a candidate interview."
+}
+
+###
+
+### 10. Interview Booking Flow - Turn 2 (Provide Name and Email)
+POST http://localhost:8001/api/v1/chat
+Content-Type: application/json
+
+{
+  "session_id": "booking-session-999",
+  "message": "My name is Alice Smith and my email is alice@example.com"
+}
+
+###
+
+### 11. Interview Booking Flow - Turn 3 (Provide Date and Time)
+POST http://localhost:8001/api/v1/chat
+Content-Type: application/json
+
+{
+  "session_id": "booking-session-999",
+  "message": "I want to schedule for 2026-11-15 at 14:00"
+}
+
+###
+
+### 12. Interview Booking Flow - Turn 4 (Explicit Confirmation)
+POST http://localhost:8001/api/v1/chat
+Content-Type: application/json
+
+{
+  "session_id": "booking-session-999",
+  "message": "confirm"
+}
+
+###
+
+### 13. List Confirmed Bookings (Paginated)
+GET http://localhost:8001/api/v1/bookings?limit=10&offset=0
+Accept: application/json

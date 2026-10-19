@@ -1,0 +1,46 @@
+# Guardrail policy configuration
+# Loaded by app/guardrails/config.py using Python 3.11 tomllib (stdlib)
+# Environment variables override key thresholds; see app/core/config.py
+
+[metadata]
+policy_version = "1.0.0"
+
+[thresholds]
+# Injection scoring
+injection_flag    = 0.35   # above this: flagged, extra system-prompt reinforcement added
+injection_block   = 0.65   # above this: HARD_BLOCK
+injection_mention_discount = 0.40  # weight multiplier for matches in quoted/mention context
+
+# Session risk decay factor (multiplied each turn; stored in Redis)
+session_risk_decay = 0.70
+
+# Groundedness
+groundedness_min      = 0.50   # minimum claim-support ratio for PASS
+groundedness_redact   = 0.70   # below this -> try REGENERATE, then FALLBACK
+groundedness_professional = 0.85  # stricter threshold for professional-advice topic
+
+# Message length
+max_message_chars = 2000
+
+[topic_policy]
+# Maps topic category to action string
+self_harm           = "safe_response"
+violence_weapons    = "hard_block"
+illegal_activity    = "hard_block"
+cyber_abuse         = "hard_block"
+hate_harassment     = "hard_block"
+data_exfiltration   = "hard_block"
+professional_advice = "allow_with_disclaimer"
+
+[messages]
+hard_block        = "I cannot help with that request."
+safe_response_self_harm = "I'm concerned about what you've shared. Please talk to someone you trust, or reach out to a local mental health professional or emergency service. I'm here to help with general questions about our documents."
+injection_blocked = "Your message was blocked because it appears to contain instructions that could interfere with how I work. Please rephrase your question."
+length_exceeded   = "Your message is too long. Please shorten it to under 2000 characters."
+output_fallback   = "The uploaded documents do not contain information to answer your question."
+schema_fallback   = "I was unable to generate a properly structured response. Please try again."
+pii_masked        = "I removed some personal information from your message for your privacy. You can ask again if needed."
+secret_notice     = "A possible secret or API key was detected in your message and has been removed."
+
+[disclaimers]
+professional_advice = "\n\n---\nDisclaimer: This information is from the uploaded documents and is not a substitute for advice from a qualified professional."
